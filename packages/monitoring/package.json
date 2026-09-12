@@ -1,0 +1,23 @@
+{
+	"name": "@repo/monitoring",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./server": "./src/server.ts"
+	},
+	"scripts": {
+		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@sentry/nextjs": "^10.30.0",
+		"posthog-js": "^1.283.0",
+		"posthog-node": "^5.11.0"
+	},
+	"devDependencies": {
+		"@repo/tsconfig": "workspace:*",
+		"typescript": "5.9.3"
+	}
+}

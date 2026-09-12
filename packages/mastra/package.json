@@ -1,0 +1,37 @@
+{
+	"dependencies": {
+		"@ai-sdk/google": "^3.0.16",
+		"@mastra/ai-sdk": "^1.0.2",
+		"@mastra/core": "^1.1.0",
+		"@mastra/loggers": "^1.0.1",
+		"@mastra/mcp": "1.1.0",
+		"@mastra/memory": "^1.0.1",
+		"@mastra/pg": "^1.0.0",
+		"@mastra/voice-google": "^0.12.0",
+		"@repo/ai": "workspace:*",
+		"@repo/config": "workspace:*",
+		"@repo/database": "workspace:*",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.5",
+		"@hono/node-server": "^1.19.9",
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "^25.2.0",
+		"hono": "^4.10.5",
+		"mastra": "^1.1.0",
+		"tsx": "^4.20.6",
+		"typescript": "5.9.3"
+	},
+	"main": "./index.ts",
+	"name": "@repo/mastra",
+	"scripts": {
+		"dev": "dotenv -c -e ../../.env -- mastra dev --dir .",
+		"classify:fixtures": "dotenv -c -e ../../.env -- tsx src/scripts/classify-fixtures.ts",
+		"write:sample-audit-log": "dotenv -c -e ../../.env -- tsx src/scripts/write-sample-audit-log.ts",
+		"query:context": "dotenv -c -e ../../.env -- tsx src/scripts/query-context.ts",
+		"mcp:verify": "dotenv -c -e ../../.env -- tsx src/scripts/mcp-verify.ts",
+		"type-check": "tsc --noEmit"
+	},
+	"version": "0.0.0"
+}

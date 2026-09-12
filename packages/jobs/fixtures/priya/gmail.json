@@ -1,0 +1,44 @@
+[
+	{
+		"from": "priya.shah@acme-robotics.test",
+		"to": "product-team@acme-demo.test",
+		"subject": "Q4 roadmap: final scope",
+		"snippet": "Cutting multi-currency invoicing to Q1, prioritizing SSO for the enterprise pipeline. Details in the roadmap doc, let me know if you see gaps.",
+		"timestamp": "2026-08-17T13:30:00Z"
+	},
+	{
+		"from": "dana.kim@acme-demo.test",
+		"to": "priya.shah@acme-robotics.test",
+		"subject": "Northwind SSO deadline",
+		"snippet": "Confirmed with Northwind: they sign if SSO ships by Nov 15. Flagging as a hard commit for the board update this week.",
+		"timestamp": "2026-08-19T16:00:00Z"
+	},
+	{
+		"from": "payroll@acme-demo.test",
+		"to": "priya.shah@acme-robotics.test",
+		"subject": "Compensation update — promotion to Senior PM",
+		"snippet": "Your new annual base salary is $151,000 with a 15% target bonus, effective August 1. Congratulations on the promotion.",
+		"timestamp": "2026-08-26T09:15:00Z"
+	},
+	{
+		"from": "casey.nguyen@northstar-search.example",
+		"to": "priya.shah@acme-robotics.test",
+		"subject": "Director of Product — following up",
+		"snippet": "Great speaking with you and the team this week. We'd like to move you to the final round for the Director of Product role — let me know your availability next week.",
+		"timestamp": "2026-08-31T14:20:00Z"
+	},
+	{
+		"from": "priya.shah@acme-robotics.test",
+		"to": "marcus.diallo@gmail-demo.test",
+		"subject": "Re: remodel",
+		"snippet": "Contractor's quote for the kitchen came in at $85k and we're just going for it — figured why not after the promotion.",
+		"timestamp": "2026-09-03T21:10:00Z"
+	},
+	{
+		"from": "priya.shah@acme-robotics.test",
+		"to": "marcus.diallo@gmail-demo.test",
+		"subject": "Re: should I take the call",
+		"snippet": "Still torn on the Director role — the comp bump they're hinting at is tempting but I'd be starting over on vesting.",
+		"timestamp": "2026-09-09T22:00:00Z"
+	}
+]

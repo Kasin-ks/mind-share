@@ -1,0 +1,27 @@
+.universe { position: relative; isolation: isolate; height: clamp(520px, 70vh, 780px); overflow: hidden; border: 1px solid #20303a; border-radius: 20px; background: radial-gradient(ellipse at 50% 57%, #132431 0%, #060f15 42%, #03090d 78%); color: #f1f7fb; }
+.heading { position: absolute; top: 28px; left: 28px; right: 28px; z-index: 2; pointer-events: none; }
+.eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #9eb7c9; }
+.heading h3 { margin: 8px 0; font-size: clamp(26px, 4vw, 40px); font-weight: 400; letter-spacing: -0.04em; }
+.heading p { color: #a7bbc9; font-size: 13px; max-width: 440px; }
+.star { width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; }
+.starLight { width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px 2px currentColor, 0 0 28px 5px currentColor; transition: transform 200ms; }
+.starLabel { position: absolute; top: 36px; width: 150px; text-align: center; color: #d7e5ef; font-size: 11px; line-height: 1.4; text-shadow: 0 2px 5px #000; }
+.star:hover .starLight, .star[data-selected="true"] .starLight { transform: scale(1.6); }
+.star[data-selected="true"] .starLabel { color: white; }
+.handle { opacity: 0; pointer-events: none; }
+.legend { position: absolute; bottom: 22px; left: 70px; right: 20px; z-index: 2; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px 18px; pointer-events: none; }
+.legend span { display: flex; align-items: center; gap: 7px; font-size: 10px; color: #adc0ce; }
+.legend i { width: 5px; height: 5px; border-radius: 50%; box-shadow: 0 0 7px currentColor; }
+.empty { position: absolute; inset: 45% 20% auto; text-align: center; color: #b9cfdf; font-size: 14px; }
+.details { position: absolute; right: 20px; bottom: 80px; z-index: 3; width: 360px; max-width: calc(100% - 40px); max-height: 55%; overflow-y: auto; padding: 18px; border: 1px solid #344653; border-radius: 12px; background: #08131deb; backdrop-filter: blur(12px); }
+.evidence { border-top: 1px solid #344653; padding: 14px 0; }
+.evidence small { overflow-wrap: anywhere; color: #9eb7c9; }
+.evidence summary { cursor: pointer; font-size: 12px; color: #a9d8fa; }
+.starLabel { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.details p { margin: 8px 0 12px; font-size: 14px; overflow-wrap: anywhere; }
+.details button { color: #a9d8fa; font-size: 12px; cursor: pointer; }
+.universe [class~="react-flow__controls"] { box-shadow: none; border: 1px solid #344653; border-radius: 8px; overflow: hidden; }
+.universe [class~="react-flow__controls-button"] { background: #10202c; color: #c8eaff; border-color: #344653; }
+.universe [class~="react-flow__node"]:focus-visible { outline: 2px solid #c8eaff; outline-offset: 8px; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .starLight { transition: none; } }
+@media (max-width: 640px) { .heading { top: 22px; left: 20px; } .heading p { max-width: 260px; } .legend { gap: 8px 12px; } }

@@ -1,0 +1,16 @@
+{
+	"name": "@repo/google-drive",
+	"version": "0.0.0",
+	"private": true,
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"scripts": {
+		"type-check": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.5",
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "^24.10.1",
+		"typescript": "5.9.3"
+	}
+}

@@ -1,0 +1,33 @@
+{
+	"dependencies": {
+		"@repo/api": "workspace:*",
+		"@repo/auth": "workspace:*",
+		"@repo/database": "workspace:*",
+		"@repo/jobs": "workspace:*",
+		"@repo/logs": "workspace:*",
+		"@repo/mastra": "workspace:*",
+		"@repo/utils": "workspace:*",
+		"drizzle-orm": "^0.44.7"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.5",
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "^24.10.1",
+		"nanoid": "^5.1.6",
+		"tsx": "^4.20.6"
+	},
+	"name": "@repo/scripts",
+	"private": true,
+	"scripts": {
+		"create:user": "dotenv -c -e ../../.env -- tsx ./src/create-user.ts",
+		"seed": "dotenv -c -e ../../.env -- tsx ./src/seed.ts",
+		"reset": "dotenv -c -e ../../.env -- tsx ./src/reset.ts",
+		"ingest:fixtures": "dotenv -c -e ../../.env -- tsx ./src/ingest-fixtures.ts",
+		"ingest:drive": "dotenv -c -e ../../.env -- tsx ./src/ingest-drive.ts",
+		"seed:protected-conclusions": "dotenv -c -e ../../.env -- tsx ./src/seed-protected-conclusions.ts",
+		"classify:context-items": "dotenv -c -e ../../.env -- tsx ./src/classify-context-items.ts",
+		"negotiate:verify": "dotenv -c -e ../../.env -- tsx ./src/negotiate-context-verify.ts",
+		"type-check": "tsc --noEmit"
+	},
+	"version": "0.0.0"
+}

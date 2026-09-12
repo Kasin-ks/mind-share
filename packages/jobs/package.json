@@ -1,0 +1,23 @@
+{
+	"name": "@repo/jobs",
+	"version": "0.0.0",
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"scripts": {
+		"type-check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@repo/auth": "workspace:*",
+		"@repo/config": "workspace:*",
+		"@repo/google-drive": "workspace:*",
+		"@repo/logs": "workspace:*",
+		"@repo/mastra": "workspace:*",
+		"pg-boss": "^12.7.0",
+		"@repo/database": "workspace:*"
+	},
+	"devDependencies": {
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "^20.11.24",
+		"typescript": "^5.3.3"
+	}
+}

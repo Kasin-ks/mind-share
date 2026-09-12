@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1
+
+# Dev image for the single-machine hackathon stack (see docker-compose.yml).
+#
+# This is deliberately NOT apps/web/Dockerfile. That file is the multi-stage
+# Cloud Run production build (turbo prune --docker + Next.js standalone output,
+# driven by deploy.sh) and stays untouched as an available option.
+#
+# This one is as simple as the hackathon warrants: copy the workspace in,
+# install it once, and run the dev servers (`next dev` / `mastra dev`) straight
+# out of the image. The source is baked in rather than bind-mounted, so code
+# changes are picked up by rebuilding:
+#
+#   docker compose up --build
+#
+# One image backs both the `web` and `mastra` services; they differ only by
+# working_dir and command.
+
+FROM node:22-bookworm-slim
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV DO_NOT_TRACK=1
+# Without this, pnpm's interactive "remove and reinstall node_modules from
+# scratch?" confirmation silently no-ops under Docker's non-TTY build (it
+# shows a default answer but never actually reinstalls), leaving an empty
+# node_modules and every workspace command failing with "not found".
+ENV CI=true
+
+# openssl: prisma engines. curl: container healthchecks. ca-certificates: TLS.
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends ca-certificates curl openssl \
+	&& rm -rf /var/lib/apt/lists/*
+
+# corepack picks up the pnpm version pinned in package.json "packageManager".
+RUN corepack enable
+
+WORKDIR /app
+
+# Fetch deps from the lockfile alone, before the source is copied in. This
+# layer only depends on pnpm-lock.yaml/pnpm-workspace.yaml, so it stays cached
+# (and `pnpm install` below skips re-downloading anything) across rebuilds
+# that only touch app code — which is the common case with `docker compose up
+# --build` during the hackathon.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN --mount=type=cache,target=/pnpm/store pnpm fetch
+
+# The full workspace is copied rather than turbo-pruned: a single image serves
+# both services, and each needs its own workspace package plus its deps.
+# .dockerignore already keeps node_modules, .next, .git and .env* out — env vars
+# are injected at runtime by docker-compose.yml, never baked into the image.
+COPY . .
+
+RUN --mount=type=cache,target=/pnpm/store pnpm install --offline --frozen-lockfile

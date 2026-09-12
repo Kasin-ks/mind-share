@@ -1,0 +1,49 @@
+# Docker
+Dockerfile
+**/Dockerfile*
+.dockerignore
+
+# Dependencies and install (pruned output is used in builder; installer runs pnpm install)
+node_modules
+**/node_modules
+.pnpm-store
+**/.pnpm-store
+
+# Build and cache (keep context small; turbo prune produces its own tree)
+.next
+**/.next
+.turbo
+**/.turbo
+.vercel
+**/dist
+**/build
+**/out
+coverage
+**/coverage
+*.tsbuildinfo
+
+# Git and IDE (keep .gitignore for Dockerfile COPY)
+.git
+.cursor
+.vscode
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env (deploy copies .env.dev/stg/prd via build-arg; exclude local secrets)
+.env
+.env.local
+.env*.local
+!.env.dev
+!.env.stg
+!.env.prd
+
+# Docs and references (not needed for build)
+README.md
+docs
+references
+**/*.md
+!apps/web/**/*.md
+!packages/**/README.md

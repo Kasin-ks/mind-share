@@ -1,0 +1,36 @@
+{
+	"dependencies": {
+		"@paralleldrive/cuid2": "^3.1.0",
+		"@prisma/adapter-pg": "^6.19.0",
+		"@prisma/client": "7.1.0",
+		"@repo/config": "workspace:*",
+		"drizzle-orm": "^0.44.7",
+		"drizzle-zod": "0.8.3",
+		"pg": "^8.16.0",
+		"zod": "^4.1.12"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.5",
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "24.10.1",
+		"@types/pg": "^8.11.0",
+		"dotenv-cli": "^11.0.0",
+		"drizzle-kit": "^0.31.7",
+		"prisma": "7.1.0",
+		"prisma-zod-generator": "2.1.2"
+	},
+	"main": "./index.ts",
+	"name": "@repo/database",
+	"scripts": {
+		"generate": "dotenv -c -e ../../.env -- drizzle-kit generate --config ./drizzle/drizzle.config.ts",
+		"check": "dotenv -c -e ../../.env -- drizzle-kit check --config ./drizzle/drizzle.config.ts",
+		"pull": "dotenv -c -e ../../.env -- drizzle-kit pull --config ./drizzle/drizzle.config.pull.ts",
+		"push": "dotenv -c -e ../../.env -- drizzle-kit push --config ./drizzle/drizzle.config.ts",
+		"migrate": "dotenv -c -e ../../.env -- drizzle-kit migrate --config ./drizzle/drizzle.config.ts",
+		"studio": "dotenv -c -e ../../.env -- drizzle-kit studio --config ./drizzle/drizzle.config.ts",
+		"studio:vector": "dotenv -c -e ../../.env -- drizzle-kit studio --config ./drizzle/drizzle.config.vector.ts",
+		"type-check": "tsc --noEmit"
+	},
+	"types": "./**/.tsx",
+	"version": "0.0.0"
+}

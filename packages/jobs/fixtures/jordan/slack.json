@@ -1,0 +1,50 @@
+[
+	{
+		"channel": "#eng-updates",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-08-18T14:32:00Z",
+		"text": "Shipped the retry-queue fix for billing webhooks this morning — error rate dropped from 3.1% to 0.4%. Closing out INFRA-482."
+	},
+	{
+		"channel": "#eng-updates",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-08-19T09:05:00Z",
+		"text": "Blocked on the Stripe sandbox creds for the payouts test suite — anyone have a working key? Can't finish the integration tests without it."
+	},
+	{
+		"channel": "#eng-general",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-08-21T16:47:00Z",
+		"text": "Team decision from standup: we're moving the Q4 migration to Postgres 16 up a sprint since the RDS deprecation notice landed last week."
+	},
+	{
+		"channel": "#random",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-08-24T11:12:00Z",
+		"text": "Proud of the team — we hit our uptime SLA for the third month running. Cake in the kitchen if anyone wants some."
+	},
+	{
+		"channel": "dm:renee-people-ops",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-08-27T10:03:00Z",
+		"text": "Renee (People Ops) confirmed my updated total comp effective July 1: base $128,000, target bonus 10%, refreshed equity grant of 400 RSUs."
+	},
+	{
+		"channel": "dm:riley",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-08-29T20:14:00Z",
+		"text": "Ugh, a recruiter from a Series B fintech in SF keeps pinging me on LinkedIn about a Staff Eng role. Might finally take the call next week, mostly out of curiosity."
+	},
+	{
+		"channel": "dm:riley",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-09-02T19:40:00Z",
+		"text": "Also — mortgage broker says we're pre-approved for way more than I expected, might actually make an offer on that condo near the light rail this weekend."
+	},
+	{
+		"channel": "dm:riley",
+		"author": "jordan.blake@acme-robotics.test",
+		"timestamp": "2026-09-05T13:22:00Z",
+		"text": "Anyone have a good financial advisor recommendation? Trying to get ahead of some backdoor Roth / tax planning stuff before year-end."
+	}
+]

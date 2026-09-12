@@ -1,0 +1,286 @@
+---
+title: MCP Documentation
+description: Connect an MCP client to a person's Context Agent and ask for their context through the Context Firewall — endpoint, transport, tools, and disclosure rules.
+---
+
+Mind Share exposes every person's **Context Agent** as its own MCP server. Instead of granting an
+agent raw access to someone's Slack, Gmail, or Drive, you point an MCP client at that person's
+endpoint and *ask*. Every answer is gated by the **Context Firewall** — classification + org RBAC,
+plus an inference-risk check — and every third-party decision leaves an audit-log row.
+
+This page covers connecting a client, the tools on the wire, and the rules that decide what comes
+back.
+
+## The endpoint
+
+```
+GET https://<your-host>/api/mcp/<userId>
+```
+
+One URL is all a client needs. `<userId>` is the **context owner's** `user.id` — the cuid from the
+`user` table, not an email or a slug. An unknown id returns `404`.
+
+There is currently no screen in the app that displays your MCP URL. To find a `userId` on a seeded
+demo stack, read it out of the database:
+
+```bash
+docker compose exec db psql -U postgres -d mind_share \
+  -c "select id, name, email from \"user\" order by name;"
+```
+
+The seeded demo cast is `jordan.blake@acme-robotics.test` (the context owner in every demo moment)
+and `priya.shah@acme-robotics.test` (a `member`-role requester in the same org).
+
+### Transport
+
+The endpoint speaks the **MCP SSE transport**, served by `@mastra/mcp`'s `MCPServer.startHonoSSE`:
+
+- `GET /api/mcp/<userId>` opens the long-lived server-sent-events stream.
+- The client POSTs each JSON-RPC message to `/api/mcp/<userId>/message?sessionId=...`. You never
+  have to configure that path — the client discovers it from the `endpoint` SSE event.
+- `POST /api/mcp/<userId>` returns `405`. That is deliberate: MCP clients that probe for the newer
+  streamable-HTTP transport first treat `400`/`404`/`405` as a signal to retry over SSE, so the
+  single plain URL above works without a `/sse` suffix or any client-side transport flag.
+
+JSON-RPC *responses* arrive back over the SSE stream, not in the POST's HTTP response.
+
+## Connecting a client
+
+<Steps>
+
+<Step>
+
+### Claude Code
+
+```bash
+claude mcp add --transport sse jordan-context https://<your-host>/api/mcp/<userId>
+```
+
+Then `/mcp` inside Claude Code to confirm the server is connected and list its tools.
+
+</Step>
+
+<Step>
+
+### Claude Desktop
+
+Claude Desktop's `mcpServers` config launches local commands, so a remote SSE server is reached
+through the standard `mcp-remote` bridge. In `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "jordan-context": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://<your-host>/api/mcp/<userId>"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop, then check the tools indicator for `checkDisclosurePolicy` and
+`ask_contextAgent`.
+
+</Step>
+
+<Step>
+
+### Mastra `MCPClient` (or any MCP SDK)
+
+This is the path the repo's own verification script uses, so it is the most thoroughly exercised
+one:
+
+```ts
+import { MCPClient } from "@mastra/mcp";
+
+const mcpClient = new MCPClient({
+	id: "my-client",
+	servers: {
+		jordan: { url: new URL("https://<your-host>/api/mcp/<userId>") },
+	},
+});
+
+const tools = await mcpClient.listTools();
+// -> jordan_checkDisclosurePolicy, jordan_ask_contextAgent
+```
+
+`MCPClient` namespaces tool names with the server key you chose (`jordan_*` above). Over raw MCP
+`tools/list`, the names are unprefixed: `checkDisclosurePolicy` and `ask_contextAgent`.
+
+</Step>
+
+<Step>
+
+### Plain `curl` (smoke test only)
+
+```bash
+curl -N https://<your-host>/api/mcp/<userId>      # 200, SSE stream opens
+curl -X POST https://<your-host>/api/mcp/<userId> # 405, expected (triggers SSE fallback)
+curl https://<your-host>/api/mcp/not-a-real-id    # 404
+```
+
+</Step>
+
+</Steps>
+
+## Available tools
+
+Two tools are published on the wire.
+
+### `checkDisclosurePolicy`
+
+The Context Firewall itself, callable directly — no LLM involved on the RBAC path, so this works
+even without a model provider configured. It answers *"may this claim be disclosed to this
+requester for this purpose?"* and returns a decision. **It never returns the claim's content**; the
+caller must already hold whatever they are asking about.
+
+**Input**
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `claim` | `StructuredClaim \| string` | Which form you pass changes which gate runs — see below. |
+| `requesterId` | `string` | The requester's `user.id`. Unverified on this transport. |
+| `purpose` | `string` | Free text; recorded on the audit row. |
+
+`StructuredClaim` is `{ decision: string, reason: string, confidence: number, entities?: { project?, people?, topics? } }`.
+
+The two `claim` forms are not interchangeable:
+
+- **`StructuredClaim`** — you intend to disclose one specific stored context item essentially
+  as-is. The firewall matches it back to that item's real row and gates on that row's
+  `classification` via RBAC.
+- **`string`** — a free-text answer *synthesized* across several items. No single stored row
+  corresponds to it, so RBAC has nothing to key off; it is treated as `public` and the
+  **inference-risk check** becomes the operative gate. A deterministic near-verbatim backstop still
+  catches strings that are just a lightly reworded copy of a `private`/`restricted` item, and
+  re-classifies them accordingly.
+
+**Output (`DisclosurePolicyDecision`)**
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `requesterId` | `string` | Echoed. |
+| `ownerId` | `string` | Bound to the endpoint, not caller-supplied. |
+| `purpose` | `string` | Echoed. |
+| `classification` | `"public" \| "team" \| "private" \| "restricted"` | What the firewall resolved the claim to. |
+| `disclosable` | `boolean` | The decision. Obey it exactly. |
+| `redactionReason` | `string?` | Present when `disclosable` is `false`. |
+| `inferenceRisk` | `{ blocked, protectedConclusion?, explanation? }?` | Present only when the inference check ran *and* blocked. |
+
+**Example decision** — Priya (a `member`) asking about one of Jordan's `restricted` items:
+
+```json
+{
+  "requesterId": "<priya-id>",
+  "ownerId": "<jordan-id>",
+  "purpose": "staffing the Q4 robotics review",
+  "classification": "restricted",
+  "disclosable": false,
+  "redactionReason": "Classified \"restricted\" — never auto-disclosed regardless of requester role."
+}
+```
+
+### `ask_contextAgent`
+
+The full per-user Context Agent, exposed as a natural-language tool (generated from the server's
+`agents` entry). Ask a question in plain English; the agent retrieves the owner's context
+internally, decides what is relevant, routes anything sensitive through `checkDisclosurePolicy`
+first, and returns the minimum sufficient answer.
+
+This tool **requires a live LLM** (`OPENROUTER_API_KEY`). `checkDisclosurePolicy` does not.
+
+Because this transport authenticates nobody, the agent behind it is constructed with an
+`untrusted` audience: its "self-query" mode — which would grant full access at every classification
+when no requester is identified — is removed entirely. Every request is treated as a third-party
+request, even one that claims to be the owner, and a request carrying no `requesterId` is treated
+as an anonymous outsider who can only see `public` items. Note this is prompt-level enforcement: a
+mitigation, not a guarantee. The hard guarantees on this surface are `checkDisclosurePolicy`'s RBAC
+check and the absence of any raw-retrieval tool.
+
+### What is deliberately *not* exposed
+
+`queryOwnContext` — the agent's internal retrieval tool — is **not** on this server's tool list, and
+must not be added.
+
+It is an unfiltered `SELECT * FROM context_items WHERE ownerId = <owner>`: every row, at every
+classification, `rawExcerpt` included. That is correct for its intended caller (the owner's own
+agent, reasoning internally, where classification is a disclosure gate rather than a retrieval
+gate). Publishing it here would hand any anonymous caller the owner's entire `private`/`restricted`
+context verbatim, with no RBAC check, no inference-risk check, and no audit row — bypassing the
+firewall rather than being gated by it. An earlier revision did expose it, and that was confirmed
+live-exploitable before removal. The repo's verification script asserts it stays off the list.
+
+## How the firewall decides
+
+### 1. Classification → RBAC
+
+Every context item carries one of four classifications. The requester's role in the **owner's**
+organization sets a ceiling:
+
+| Requester's org role | Highest classification auto-disclosable |
+| --- | --- |
+| No membership in the owner's org (or an unrecognized role) | `public` |
+| `member` | `team` |
+| `admin` / `owner` | `private` |
+| Anyone | `restricted` is **never** auto-released |
+
+An unrecognized or malformed role string fails closed to "no membership", not open.
+
+### 2. Inference risk
+
+RBAC alone cannot catch *"the wording never states X, but it lets you derive X."* So when the claim
+is a synthesized free-text answer and RBAC has already allowed it, a second pass evaluates that
+answer against the owner's seeded **protected conclusions** (e.g. "job searching", "compensation
+band"). If the answer would let the requester confidently infer a protected conclusion, it is
+blocked and `inferenceRisk.blocked` is set.
+
+The check is skipped when RBAC has already denied — no answer is going out either way.
+
+### 3. Self-queries short-circuit
+
+When `requesterId === ownerId`, the call returns `disclosable: true` with no RBAC check, no
+inference check, and **no audit row** — viewing your own data is not a disclosure event. Because
+this transport does not verify `requesterId`, that short-circuit is reachable by any caller who
+knows the owner's id — see [Hardening](#hardening).
+
+### 4. Audit
+
+Every third-party check writes one `context_audit_log` row via the firewall: requester, owner,
+purpose, what was shared or redacted, and why. A withheld row never carries the withheld content in
+any field — including the reconstructed `question` — because the audit trail is visible to the
+requester too.
+
+## Verifying your setup
+
+The repo ships an end-to-end check that hosts a real `MCPServer`, connects a real `MCPClient` over
+SSE, asserts `queryOwnContext` is absent, and runs a complete firewall decision plus its audit
+write — all with **no LLM dependency**:
+
+```bash
+pnpm --filter @repo/mastra mcp:verify
+```
+
+It needs a seeded database (`pnpm --filter @repo/scripts seed`) with ingested context items.
+
+## Troubleshooting
+
+| Symptom | Cause |
+| --- | --- |
+| `404 {"error":"No such user \"...\""}` | The `<userId>` isn't a real `user.id`. It's a cuid, not an email. |
+| `405` on `POST /api/mcp/<userId>` | Expected. Only `GET` is exported on that path; compliant clients retry over SSE. |
+| Client connects but lists no tools | You're probably pointed at the `/message` path. Connect to the base URL only. |
+| `ask_contextAgent` errors with 401/403 | No `OPENROUTER_API_KEY`. Use `checkDisclosurePolicy` to exercise the protocol without a model. |
+| Answers come back as if the caller were anonymous | You passed no `requesterId`, so the agent treats you as an outsider with `public`-only access. |
+| Everything returns `disclosable: true` unexpectedly | `requesterId` equals `ownerId`, which short-circuits the whole firewall. |
+
+## Hardening
+
+The safe calling convention today is a **trusted, in-process caller** that already knows the real
+requester identity from an authenticated session — which is what `negotiateContext` does: it calls
+the Context Agent directly (no network hop, no spoofing surface) and binds the session's real user
+id so the model cannot relay a different one.
+
+If you need this over the MCP transport instead, add a real auth layer first: an API key or
+per-user session token the server verifies and uses to override the caller-supplied `requesterId`,
+or `@mastra/mcp`'s OAuth middleware. Do **not** "fix" the gap by defaulting `requesterId` to
+something privileged — that silently bypasses RBAC for every caller instead of flagging it.

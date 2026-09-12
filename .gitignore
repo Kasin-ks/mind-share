@@ -1,0 +1,50 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
+.next/
+out/
+build
+.swc/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*
+!.env.example
+
+# turbo
+.turbo
+
+# ui
+dist/
+
+# typescript
+*.tsbuildinfo
+
+# other 
+.react-email/
+.content-collections/
+.prisma-zod-generator-manifest.json
+# Ignore everything inside references folder, but keep the folder itself
+references/*
+!references/.gitkeep
+
+# mastra
+.mastra/
+# local-only compose port mappings
+docker-compose.override.yml

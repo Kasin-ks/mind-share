@@ -1,0 +1,50 @@
+[
+	{
+		"channel": "#product-updates",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-08-17T13:00:00Z",
+		"text": "Locked scope for the Q4 roadmap review — cutting the multi-currency invoicing feature to Q1, prioritizing the SSO enterprise ask instead."
+	},
+	{
+		"channel": "#product-updates",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-08-19T15:20:00Z",
+		"text": "Customer call recap: Northwind Corp confirmed they'll sign if SSO ships by Nov 15. That's now our hard deadline, flagging for the board update."
+	},
+	{
+		"channel": "#eng-general",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-08-20T10:45:00Z",
+		"text": "Blocked on design review for the SSO settings page — need someone from design by EOD Wed or we slip the Northwind date."
+	},
+	{
+		"channel": "#random",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-08-23T18:02:00Z",
+		"text": "Great sprint demo today team — customer beta feedback has been really positive on the new dashboard."
+	},
+	{
+		"channel": "dm:renee-people-ops",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-08-26T11:15:00Z",
+		"text": "Renee confirmed my comp adjustment following the promotion: new base is $151,000 plus 15% bonus target, effective Aug 1."
+	},
+	{
+		"channel": "dm:marcus",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-08-30T21:05:00Z",
+		"text": "Had a second-round interview with a Series D company yesterday for a Director of Product role, still deciding if I even want to leave."
+	},
+	{
+		"channel": "dm:marcus",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-09-03T20:40:00Z",
+		"text": "We're finally doing the kitchen remodel we've been putting off — contractor quoted $85k and I didn't even blink lol."
+	},
+	{
+		"channel": "dm:marcus",
+		"author": "priya.shah@acme-robotics.test",
+		"timestamp": "2026-09-08T12:18:00Z",
+		"text": "Anyone know a good CPA? This year's taxes are shaping up to be more complicated than usual."
+	}
+]

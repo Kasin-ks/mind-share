@@ -1,0 +1,44 @@
+[
+	{
+		"from": "jordan.blake@acme-robotics.test",
+		"to": "eng-team@acme-demo.test",
+		"subject": "Retry-queue fix deployed",
+		"snippet": "Deployed the billing webhook retry fix to prod. Error rate down to 0.4%. Runbook and dashboard links updated, closing INFRA-482.",
+		"timestamp": "2026-08-18T15:10:00Z"
+	},
+	{
+		"from": "sam.rivera@acme-demo.test",
+		"to": "jordan.blake@acme-robotics.test",
+		"subject": "Re: Q4 migration timeline",
+		"snippet": "Agreed — let's pull the Postgres 16 migration into sprint 24 given the RDS deprecation date. Nice catch, thanks for flagging early.",
+		"timestamp": "2026-08-22T08:30:00Z"
+	},
+	{
+		"from": "payroll@acme-demo.test",
+		"to": "jordan.blake@acme-robotics.test",
+		"subject": "Compensation Statement — effective July 1",
+		"snippet": "Your updated annual base salary is $128,000 with a 10% target bonus and a refreshed equity grant of 400 RSUs. Full statement attached.",
+		"timestamp": "2026-08-27T09:00:00Z"
+	},
+	{
+		"from": "taylor.morgan@brightpath-talent.example",
+		"to": "jordan.blake@acme-robotics.test",
+		"subject": "Staff Engineer role — quick chat?",
+		"snippet": "Following up from LinkedIn — we have a Staff Eng opening on our payments team and I think you'd be a strong fit given your fintech background. Open to a quick call this week?",
+		"timestamp": "2026-08-28T17:45:00Z"
+	},
+	{
+		"from": "jordan.blake@acme-robotics.test",
+		"to": "riley.chen@gmail-demo.test",
+		"subject": "Re: condo",
+		"snippet": "Mortgage pre-approval came back higher than I expected — might actually put in an offer on the place near the light rail this weekend.",
+		"timestamp": "2026-09-02T20:05:00Z"
+	},
+	{
+		"from": "jordan.blake@acme-robotics.test",
+		"to": "riley.chen@gmail-demo.test",
+		"subject": "Re: offer talk",
+		"snippet": "Comp conversation with Renee went fine, still weighing it against what recruiters keep quoting me for similar roles elsewhere.",
+		"timestamp": "2026-09-06T21:30:00Z"
+	}
+]

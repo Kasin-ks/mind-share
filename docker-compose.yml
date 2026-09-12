@@ -1,0 +1,199 @@
+# Mind Share — the whole stack on one machine.
+#
+# For the hackathon this single compose file is both the dev environment and the
+# "deployment" used for the live demo. There is no separate deploy step, and
+# deploy.sh / Cloud Run (apps/web/Dockerfile) is deliberately unused this week.
+#
+#   docker compose up --build   # first run, and after any code or dep change
+#   docker compose up           # start again with the image you already built
+#   docker compose down         # stop (Postgres data survives)
+#   docker compose down -v      # stop and wipe the Postgres volume too
+#
+#   web      → http://localhost:3000
+#   mastra   → http://localhost:4111  (Mastra Studio / agent API)
+#   postgres → postgres://postgres:postgres@localhost:5432/mind_share
+#   studio   → https://local.drizzle.studio (Drizzle Studio; proxies to the
+#              local server exposed on localhost:4983 by the `studio` service)
+#
+# Source is baked into the image (Dockerfile.dev), not bind-mounted: there is no
+# hot reload, so re-run `docker compose up --build` to pick up code changes.
+# That keeps the stack simple and reliable — no volume tricks needed to stop a
+# host bind mount from hiding the pnpm workspace's node_modules.
+#
+# First run only, to create the schema and seed data inside the compose DB:
+#
+#   docker compose exec web pnpm --filter @repo/database push
+#
+# ---------------------------------------------------------------------------
+# Env file convention
+# ---------------------------------------------------------------------------
+# This stack reuses the env file the repo already has: `./setup.sh` copies
+# `.env.example` → `.env.local`, and both app services read that same file via
+# `env_file` below. No extra `.env.docker` to keep in sync — put your API keys
+# (OPENROUTER_API_KEY, GOOGLE_* OAuth, ...) in `.env.local` exactly as you would for
+# a non-Docker `pnpm dev`. `.dockerignore` excludes `.env*`, so nothing secret
+# is baked into the image; it is injected at run time.
+#
+# The connection-string vars are then *overridden* per service under
+# `environment:` (which wins over `env_file:`) so they point at the compose
+# network hostname `postgres` rather than `localhost`. That means a `.env.local`
+# written for a host-side Postgres keeps working outside Docker while the
+# containers always talk to the compose Postgres.
+#
+# `.env.local` is optional (`required: false`) so a fresh clone can boot the
+# stack before configuring anything. Postgres credentials come from the
+# `POSTGRES_*` variables below, which default to dev values and can be
+# overridden from your shell or a root `.env` file if you ever need to.
+
+name: mind-share
+
+x-dev-env-file: &dev-env-file
+  - path: .env.local
+    required: false
+
+x-dev-build: &dev-build
+  context: .
+  dockerfile: Dockerfile.dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    # If Mastra ever needs pgvector (product specification currently cuts vector search),
+    # swap this for pgvector/pgvector:pg17 — same env vars, ships the extension.
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-mind_share}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mind_share}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    build: *dev-build
+    # Both services share one image; only working_dir + command differ.
+    image: mind-share-dev:latest
+    pull_policy: build
+    restart: unless-stopped
+    working_dir: /app/apps/web
+    # Production mode: `next build` runs here at container start (not at
+    # `docker build` time), so the real environment/.env.local values are
+    # already injected when NEXT_PUBLIC_* vars get inlined into the bundle -
+    # no build-arg plumbing like apps/web/Dockerfile's Cloud Run build needs.
+    # Still no hot reload: `docker compose up --build` to pick up code changes.
+    command:
+      [
+        "sh",
+        "-c",
+        "pnpm exec next build && pnpm exec next start --hostname 0.0.0.0 --port 3000",
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: *dev-env-file
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Compose-internal DB hostname, overriding whatever .env.local says.
+      DATABASE_URL: &database_url postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-mind_share}
+      DIRECT_URL: *database_url
+      # @repo/jobs (pg-boss) runs in-process inside Next.js via
+      # instrumentation.ts — there is no separate worker service; it uses this
+      # same DATABASE_URL.
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fsS http://localhost:3000/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      # Generous: `next build` runs before the server starts listening.
+      start_period: 300s
+
+  mastra:
+    build: *dev-build
+    image: mind-share-dev:latest
+    pull_policy: build
+    restart: unless-stopped
+    working_dir: /app/packages/mastra
+    # Mirrors packages/mastra's own "dev" script (`mastra dev --dir .`) minus the
+    # dotenv-cli wrapper: Compose already injects the env, and .env is not
+    # present in the container.
+    command: ["pnpm", "exec", "mastra", "dev", "--dir", "."]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: *dev-env-file
+    environment:
+      NODE_ENV: development
+      # `mastra dev` has no --port flag; it reads PORT (default 4111).
+      PORT: "4111"
+      # @mastra/pg storage reuses the @repo/database pool, i.e. DATABASE_URL.
+      DATABASE_URL: *database_url
+      DIRECT_URL: *database_url
+      # Mastra vector store (drizzle.config.vector.ts) — same Postgres for now.
+      VECTOR_DATABASE_URL: *database_url
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fsS http://localhost:4111/api >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 180s
+
+  studio:
+    build: *dev-build
+    image: mind-share-dev:latest
+    pull_policy: build
+    restart: unless-stopped
+    working_dir: /app/packages/database
+    # drizzle-kit studio just runs a local proxy server; the actual UI is the
+    # hosted page at https://local.drizzle.studio, which talks to this proxy
+    # over CORS. --host 0.0.0.0 is required so the proxy is reachable from
+    # outside the container, not just from localhost inside it.
+    command:
+      [
+        "pnpm",
+        "exec",
+        "drizzle-kit",
+        "studio",
+        "--config",
+        "./drizzle/drizzle.config.ts",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "4983",
+      ]
+    ports:
+      - "127.0.0.1:4983:4983"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: *dev-env-file
+    environment:
+      DATABASE_URL: *database_url
+      DIRECT_URL: *database_url
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    # TUNNEL_TOKEN comes from .env.local (same convention as web/mastra),
+    # not from docker-compose.yml's own ${...} substitution, which only
+    # reads a root .env file rather than .env.local.
+    env_file: *dev-env-file
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
